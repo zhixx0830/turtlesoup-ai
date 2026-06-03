@@ -14,7 +14,7 @@ if "secret_answer" not in st.session_state:
     # 🌟 修正：給 AI 明確的指令，讓它隨機生出一個水果，不要講廢話
     response = st.session_state.client.models.generate_content(
         model='gemini-2.5-flash',
-        contents='山竹'
+        contents='請隨機給我一個日常生活中常見的水果名稱，只需要輸出該名詞，不要加任何其他字。'
     )
     st.session_state.secret_answer = response.text.strip()
     
