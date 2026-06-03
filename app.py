@@ -3,25 +3,22 @@ from google import genai
 import time
 
 # ================= 1. 初始設定與 API 綁定 =================
-#金鑰
-GOOGLE_API_KEY = "GOOGLE_API_KEY"
+# 🌟 雲端專用寫法：讓程式自己去「秘密保險箱」拿鑰匙
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"] 
 
-# 🌟 關鍵修復：把連線通訊器 (client) 也存進記憶裡，不讓它被斷線
 if "client" not in st.session_state:
     st.session_state.client = genai.Client(api_key=GOOGLE_API_KEY)
 
 # ================= 2. 初始化遊戲狀態 =================
 if "secret_answer" not in st.session_state:
-    # 這裡改用 st.session_state.client 來呼叫
+    # 🌟 修正：給 AI 明確的指令，讓它隨機生出一個水果，不要講廢話
     response = st.session_state.client.models.generate_content(
         model='gemini-2.5-flash',
-        contents='山竹'
+        contents='請隨機給我一個日常生活中常見的水果名稱，只需要輸出該名詞，不要加任何其他字。'
     )
     st.session_state.secret_answer = response.text.strip()
     
     st.session_state.messages = []
-    
-    # 聊天室也改用 st.session_state.client 來建立
     st.session_state.chat = st.session_state.client.chats.create(model='gemini-2.5-flash')
 
 # ================= 3. 網頁 UI 介面設計 =================
