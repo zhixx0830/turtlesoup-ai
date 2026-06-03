@@ -4,7 +4,7 @@ import time
 
 # ================= 1. 初始設定與 API 綁定 =================
 #金鑰
-GOOGLE_API_KEY = "GOOGLE_API_KEY" 
+GOOGLE_API_KEY = "GOOGLE_API_KEY"
 
 # 🌟 關鍵修復：把連線通訊器 (client) 也存進記憶裡，不讓它被斷線
 if "client" not in st.session_state:
