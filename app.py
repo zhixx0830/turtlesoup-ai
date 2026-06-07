@@ -66,6 +66,29 @@ if user_input:
         response = st.session_state.chat.send_message(safe_prompt)
         ai_reply = response.text.strip()
 
+        # (前面的 safe_prompt 保持不變)
+
+        # 🌟 誠實重試機制：絕不假造答案，真的等 API 通了由 AI 親自回答
+        ai_reply = None
+        
+        for attempt in range(4):  # 最多嘗試呼叫 AI 4 次
+            try:
+                # 嘗試發送訊息給 AI
+                response = st.session_state.chat.send_message(safe_prompt)
+                ai_reply = response.text.strip()
+                break  # 如果 AI 成功給出答案，就安全跳出迴圈
+                
+            except Exception as e:
+                # 如果被限速，不印出假答案，而是真的等 3 秒鐘讓伺服器冷卻，然後再重新問 AI
+                time.sleep(3) 
+
+        # 嚴格判斷：是否真正拿到 AI 的答案？
+        if ai_reply is None:
+            # 如果等了 4 次（超過 10 秒）還是被 Google 擋下來，就誠實顯示系統錯誤
+            st.error("⚠️ 系統提示：目前 Google 伺服器額度限速中，請等待 1 分鐘後再重新提問。")
+            st.stop() # 停止程式，絕不把錯誤當成遊戲對話存進去
+        
+        # 只有在 100% 確定拿到 AI 親自回答的答案時，才顯示在畫面上並存入紀錄
         with st.chat_message("assistant"):
             st.markdown(ai_reply)
         st.session_state.messages.append({"role": "assistant", "content": ai_reply})
