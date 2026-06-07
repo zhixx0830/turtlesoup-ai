@@ -102,4 +102,30 @@ if not st.session_state.game_over:
                 st.session_state.messages.append({"role": "assistant", "content": ai_reply})
                 
                 st.balloons() # 放煙火慶祝
-                st.success(f"🎉 遊戲結束！順利破案！答案是 【{
+                st.success(f"🎉 遊戲結束！順利破案！答案是 【{st.session_state.secret_answer}】")
+                st.rerun()
+            
+            else:
+                # 🌟 誠實重試機制（問答版）：絕不假造答案，真的等 API 通了由 AI 親自回答
+                ai_reply = None
+                
+                for attempt in range(4):  # 最多嘗試呼叫 AI 4 次
+                    try:
+                        # 正常問答：直接將玩家的提問送出（因為防禦規則已經在系統指令裡了）
+                        response = st.session_state.chat.send_message(user_input)
+                        ai_reply = response.text.strip()
+                        break  # 如果 AI 成功給出答案，就安全跳出迴圈
+                        
+                    except Exception as e:
+                        # 如果被限速，等待 3 秒鐘讓伺服器冷卻
+                        time.sleep(3) 
+
+                # 嚴格判斷：如果等了 4 次還是被擋下來，顯示系統錯誤
+                if ai_reply is None:
+                    st.error("⚠️ 系統提示：目前 Google 伺服器額度限速中，請等待 1 分鐘後再重新提問。")
+                    st.stop()
+                
+                # 只有確定拿到 AI 親自回答的答案時，才顯示並存入紀錄
+                with st.chat_message("assistant"):
+                    st.markdown(ai_reply)
+                st.session_state.messages.append({"role": "assistant", "content": ai_reply})
