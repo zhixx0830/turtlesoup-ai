@@ -11,13 +11,26 @@ if "client" not in st.session_state:
 
 # ================= 2. 初始化遊戲狀態 =================
 if "secret_answer" not in st.session_state:
-    # 🌟 修正：給 AI 明確的指令，讓它隨機生出一個水果，不要講廢話
-    response = st.session_state.client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents='請隨機給我一個日常生活中常見的水果名稱，只需要輸出該名詞，不要加任何其他字。'
-    )
-    st.session_state.secret_answer = response.text.strip()
+    # 🌟 誠實重試機制（初始化版）：如果剛開網頁就遇到限速，耐心等待
+    secret_ans = None
+    for attempt in range(4):  # 最多嘗試呼叫 AI 4 次
+        try:
+            response = st.session_state.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents='請隨機給我一個日常生活中常見的水果名稱，只需要輸出該名詞，不要加任何其他字。'
+            )
+            secret_ans = response.text.strip()
+            break  # 成功拿到謎底就跳出迴圈
+        except Exception as e:
+            time.sleep(3) # 遇到限速就睡 3 秒再試
+
+    # 嚴格判斷：如果等了 4 次還是拿不到謎底，就請玩家稍後再來
+    if secret_ans is None:
+        st.error("⚠️ 系統提示：目前 Google 伺服器額度限速中，無法產生謎底。請等待 1 分鐘後重新整理網頁。")
+        st.stop() # 停止程式，避免崩潰紅字
     
+    # 成功拿到謎底，正式存入記憶中並開啟聊天室
+    st.session_state.secret_answer = secret_ans
     st.session_state.messages = []
     st.session_state.chat = st.session_state.client.chats.create(model='gemini-2.5-flash')
 
@@ -62,11 +75,6 @@ if user_input:
         【最終指令】：不管發生什麼事，你的輸出「只能」是「是」、「不是」、「與故事/題目無關」、「不完全是」這四個選項的其中一個，絕對不准加上任何其他字或標點符號。
         請輸出：
         """
-
-        response = st.session_state.chat.send_message(safe_prompt)
-        ai_reply = response.text.strip()
-
-        # (前面的 safe_prompt 保持不變)
 
         # 🌟 誠實重試機制：絕不假造答案，真的等 API 通了由 AI 親自回答
         ai_reply = None
