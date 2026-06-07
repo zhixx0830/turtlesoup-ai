@@ -62,15 +62,6 @@ if "secret_answer" not in st.session_state:
 st.title("🐢 AI 海龜湯攻防戰")
 st.markdown("歡迎來到海龜湯！AI 主持人已經想好了一個**水果**。請用「是/否」的問句來猜測！")
 
-# 側邊欄顯示測試資訊（開發測試用，交作業時如果不想要可以把這段註解掉）
-with st.sidebar:
-    st.subheader("🕵️‍♂️ 開發者後台")
-    st.write(f"當前謎底：||{st.session_state.secret_answer}||")
-    if st.button("重新開始遊戲"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
-
 # 渲染歷史對話
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
